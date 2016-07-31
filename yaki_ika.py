@@ -319,7 +319,7 @@ def dt_filename(data):
     """
     if data['start_at'] is not None:
         fdt = datetime.datetime.fromtimestamp(data['start_at'])
-    if d is None:
+    if fdt is None:
         fdt = datetime.datetime.fromtimestamp(data['end_at'])
         fdt = st.dt - datetime.timedelta(minutes=-3)
     return fdt.strftime('%Y%m%d-%H%M')
