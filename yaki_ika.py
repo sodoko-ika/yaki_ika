@@ -318,18 +318,14 @@ def dt_filename(data):
     u"""
     """
     if data['start_at'] is not None:
-        d = datetime.datetime.fromtimestamp(data['start_at'])
+        fdt = datetime.datetime.fromtimestamp(data['start_at'])
     if d is None:
-        d = datetime.datetime.fromtimestamp(data['end_at'])
-        d = st.dt - datetime.timedelta(minutes=-3)
-    return d.strftime('%Y%m%d-%H%M')
+        fdt = datetime.datetime.fromtimestamp(data['end_at'])
+        fdt = st.dt - datetime.timedelta(minutes=-3)
+    return fdt.strftime('%Y%m%d-%H%M')
 
 def imgpng_write(data):
-    u"""msgpackに含まれる
-    'image_gear': 
-    'image_result': 
-    'image_judge': 
-    の画像ファイルを出力する。
+    u"""msgpackに含まれる 'image_gear', 'image_result', 'image_judge' の画像ファイルを出力する。
     """
     ts = dt_filename(data)
     imgnames = {'image_gear', 'image_result', 'image_judge'}
@@ -340,8 +336,7 @@ def imgpng_write(data):
         cv2.imwrite(fn, decimg)
  
 def json_write(data):
-    u"""
-    """
+    u""" jsonファイルを書き出す 画像ファイルは、画像ファイルの名称に置き換える """
     ts = dt_filename(data)
     imgnames = {'image_gear', 'image_result', 'image_judge'}
     for imgname in imgnames:
@@ -377,8 +372,9 @@ def msg_write(fw, at_sec, msg):
 
 def event_write(data):
     u"""
-    'special_weapon'は、自分以外が発動したイベントも拾っている。 me=True が自分の発動したタイミング。
-    """
+    イベントをタイムライン風のテキストとして出力する
+    対応するイベントは、    'special_charged', 'special_weapon', 'dead', 'killed', 'low_ink'
+    special_weapon は、自分以外が発動したイベントも拾っている。 me=True が自分の発動したタイミング。    """
     type_lists = {
         'special_charged',
 	    'dead',
@@ -403,10 +399,11 @@ def event_write(data):
             sp_charge_flag = True   #たまった
 
         if event['type'] == 'special_weapon':   #スペシャルを使ったとき
-            if event['me'] and event['special_weapon'] == my_special:   #データ中のスペシャル使用者が自分＆自ブキのスペシャルの時
+            #データ中のスペシャル使用者が自分＆自ブキのスペシャルの時
+            if event['me'] and event['special_weapon'] == my_special:
                 sp_used += 1    #スペシャルを使った数
                 sp_charge_flag = False  #使ったら消える
-                reason_name ="スペシャル"
+                reason_name = "スペシャル"
                 msg = DICT_MESSAGES[event['type']]
                 if event['special_weapon'] in DICT_REASONS:
                     reason_code = event['special_weapon']
@@ -414,7 +411,7 @@ def event_write(data):
                 msg = msg % reason_name
 
         if event['type'] == 'dead': #やられた
-            reason_name ="しらないブキ"
+            reason_name = "しらないブキ"
             if event['reason'] in DICT_REASONS:
                 reason_code = event['reason']
                 reason_name = get_reason_name(reason_code)
@@ -459,7 +456,8 @@ def event_write(data):
 
             #ブキは プライムシューター リザルトは 999p 0k/1d です。
             #スペシャルは3回ためて 3回つかい、抱え落ちはしませんでした。
-            msg = "\n%sをつかって %dp %dk/%ddでした。" % (get_reason_name(data['weapon']), data['my_point'], data['kill'], data['death'])
+            msg = "\n%sをつかって %dp %dk/%ddでした。" % \
+                (get_reason_name(data['weapon']), data['my_point'], data['kill'], data['death'])
             if sp_dead == 0:
                 sp_dead_msg = "ありません。"
             else:
